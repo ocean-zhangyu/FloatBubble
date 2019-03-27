@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorPrimary"
+        android:text="@string/setting"
+        android:gravity="center"
+        android:textSize="20sp"
+        android:textColor="#DDFFFFFF"/>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp">
+            <TextView
+                android:id="@+id/setting_startOverly"
+                android:text="开启悬浮窗"
+                android:gravity="center_vertical"
+                android:layout_width="match_parent"
+                android:layout_height="50dp" />
+            <TextView
+                android:id="@+id/setting_resumeService"
+                android:text="重启通知监听服务"
+                android:gravity="center_vertical"
+                android:layout_width="match_parent"
+                android:layout_height="50dp" />
+            <TextView
+                android:id="@+id/setting_3"
+                android:text="设置三"
+                android:gravity="center_vertical"
+                android:layout_width="match_parent"
+                android:layout_height="50dp" />
+            <TextView
+                android:id="@+id/setting_4"
+                android:text="设置四"
+                android:gravity="center_vertical"
+                android:layout_width="match_parent"
+                android:layout_height="50dp" />
+            <TextView
+                android:id="@+id/setting_5"
+                android:text="设置五"
+                android:gravity="center_vertical"
+                android:layout_width="match_parent"
+                android:layout_height="50dp" />
+        </LinearLayout>
+
+    </ScrollView>
+
+
+</LinearLayout>

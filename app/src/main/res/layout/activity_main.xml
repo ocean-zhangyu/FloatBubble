@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorPrimary"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
+        </android.support.v7.widget.Toolbar>
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/fragment_vp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/toolbar"
+        android:layout_above="@+id/tabs_rg"
+         />
+    <RadioGroup
+        android:id="@+id/tabs_rg"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_alignParentBottom="true"
+        android:background="#dcdcdc"
+        android:orientation="horizontal"
+        android:paddingTop="5dp">
+
+        <RadioButton
+            android:id="@+id/today_tab"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:gravity="center_horizontal"
+            android:button="@null"
+            android:checked="true"
+            android:drawableTop="@drawable/ic_home_black_24dp"
+            android:text="今日" />
+
+        <RadioButton
+            android:id="@+id/record_tab"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:button="@null"
+            android:gravity="center_horizontal"
+            android:drawableTop="@drawable/ic_home_black_24dp"
+            android:text="记录" />
+
+        <RadioButton
+            android:id="@+id/contact_tab"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:gravity="center_horizontal"
+            android:button="@null"
+            android:drawableTop="@drawable/ic_home_black_24dp"
+            android:text="使用说明" />
+
+        <RadioButton
+            android:id="@+id/settings_tab"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:gravity="center_horizontal"
+            android:button="@null"
+            android:drawableTop="@drawable/ic_home_black_24dp"
+            android:text="我的" />
+    </RadioGroup>
+ </RelativeLayout>
