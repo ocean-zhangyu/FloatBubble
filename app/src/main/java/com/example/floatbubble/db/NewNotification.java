@@ -6,12 +6,14 @@ import android.content.Intent;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public class NewNotification{
     private String time;
     private String title;
     private String content;
     private String label;
+    private String sendAppName;
     private int priority;
     private PendingIntent intent;
     private Notification notification;
@@ -30,13 +32,21 @@ public class NewNotification{
     }
     public NewNotification(Notification notification) {
         this.notification = notification;
-        this.time = new SimpleDateFormat("HH:mm").format(new Date(notification.when));
+        this.time = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date(notification.when));
         this.title = notification.extras.getString(Notification.EXTRA_TITLE);
         this.content = notification.extras.getString(Notification.EXTRA_TEXT);
         intent = notification.contentIntent;
         this.priority = notification.priority;
     }
-
+    public NewNotification(Notification notification1, String label) {
+        this.notification = notification1;
+        this.time = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date(notification.when));
+        this.title = notification.extras.getString(Notification.EXTRA_TITLE);
+        this.content = notification.extras.getString(Notification.EXTRA_TEXT);
+        intent = notification.contentIntent;
+        this.priority = notification.priority;
+        this.label = label;
+    }
     public String getTime() {
         return time;
     }
@@ -60,6 +70,14 @@ public class NewNotification{
     public void setContent(String content) {
         this.content = content;
     }
+    public String getSendAppName() {
+        return sendAppName;
+    }
+
+    public void setSendAppName(String sendAppName) {
+        this.sendAppName = sendAppName;
+    }
+
 
     public String getLabel() {
         return label;

@@ -53,10 +53,10 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
         holder.mContentView.setText(notification.getContent());
 
         holder.mView.setOnClickListener(v -> {
-            int position1 = holder.getAdapterPosition();
-            NewNotification notification1 = mNotiList.get(position1);
+            //int position1 = holder.getAdapterPosition();
+            //NewNotification notification1 = mNotiList.get(position1);
             try {
-                notification1.getNotification().contentIntent.send(1);
+                notification.getNotification().contentIntent.send(1);
             } catch (PendingIntent.CanceledException e) {
                 e.printStackTrace();
             }
@@ -87,15 +87,16 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
         notifyItemRemoved(position);
         notifyDataSetChanged();
     }
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        public final CardView mView;
-        public ImageView mIconView;
-        public TextView mTimeView;
-        public TextView mTitleView;
-        public TextView mContentView;
-        public NewNotification mItem;
 
-        public ViewHolder(View view) {
+    public class ViewHolder extends RecyclerView.ViewHolder {
+        private final CardView mView;
+        private ImageView mIconView;
+        private TextView mTimeView;
+        private TextView mTitleView;
+        private TextView mContentView;
+        private NewNotification mItem;
+
+        private ViewHolder(View view) {
             super(view);
             mView = (CardView) view;
             mIconView = view.findViewById(R.id.notification_icon);

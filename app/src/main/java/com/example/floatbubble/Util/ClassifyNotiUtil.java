@@ -9,12 +9,11 @@ public class ClassifyNotiUtil {
     //
 
     //处理方法
-    public static NewNotification analyseNoti(Notification notification) {
+    public static String analyseNoti(Notification notification) {
         //判断逻辑
-        NewNotification newNotification = new NewNotification(notification);
+        String label = "提醒";
 
-        newNotification.setLabel("提醒");
 
-        return newNotification;
+        return label;
     }
 }

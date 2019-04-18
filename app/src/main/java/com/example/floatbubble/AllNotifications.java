@@ -14,6 +14,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.example.floatbubble.db.NewNotification;
 import com.example.floatbubble.db.NotificationPool;
@@ -78,12 +79,7 @@ public class AllNotifications extends Fragment {
             recyclerView.setAdapter(myItemRecyclerViewAdapter);
         }
         refreshLayout = view.findViewById(R.id.notification_refresh);
-        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refreshAllLayout();
-            }
-        });
+        refreshLayout.setOnRefreshListener(() -> refreshAllLayout());
         return view;
     }
 
@@ -107,6 +103,7 @@ public class AllNotifications extends Fragment {
     public void refreshView() {
         //更新通知列表
        // ((MyItemRecyclerViewAdapter) recyclerView.getAdapter()).addItem(0);
+        Toast.makeText(getContext(),"有新通知到来",Toast.LENGTH_SHORT).show();
         myItemRecyclerViewAdapter.addItem(0);
     }
 

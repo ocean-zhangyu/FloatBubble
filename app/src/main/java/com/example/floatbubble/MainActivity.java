@@ -22,6 +22,7 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
+import com.example.floatbubble.Util.AppUtil;
 import com.example.floatbubble.service.NotificationMonitorService;
 
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int UPDATE_NOTILIST = 1;
+    private static final int REQUEST_NOTIPERMISSION = 0;
     private ViewPager mViewPager;
     private RadioGroup mTabRadioGroup;
 
@@ -43,25 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
     private NotificationMonitorService.NmBinder nmBinder;
 
-    //绑定服务的connection
-    private ServiceConnection connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            nmBinder = (NotificationMonitorService.NmBinder) service;
-            //前面的是Binder,可以用来操纵服务,调用服务的方法
-            nMService = nmBinder.getNmService();
-        }
 
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-
-        }
-
-        @Override
-        public void onBindingDied(ComponentName name) {
-            unbindService(connection);
-        }
-    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,29 +52,45 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         initView();
-        //绑定服务
-        if (nMService == null) {
-            Intent intent = new Intent(this, SettingActivity.class);
-            startActivity(intent);
-        }
-        if (nMService != null) {
+        Log.d("MainActivity","onCreate 活动");
+        if (!AppUtil.isNotificationListenerEnabled(this)) {
+            //未绑定服务
+            Intent openSettings = new Intent(this, SettingActivity.class);
+            startActivityForResult(openSettings,REQUEST_NOTIPERMISSION);
+        } else {
             Intent intent = new Intent(this, NotificationMonitorService.class);
+            //startActivity(intent);
+            Log.d("主活动","绑定活动");
             bindService(intent, connection, BIND_AUTO_CREATE);
-            Log.d("主活动", "绑定服务");
+            Log.d("主活动", "设置监听");
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (nMService != null) {
             //有新通知到来,该信息由通知监听服务发送
             nMService.setNotificationComeListener(() -> {
                 //更新界面
                 allNotiFragment.refreshView();
             });
         }
-
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
+        Log.d("MainActivity","onStart 活动");
         //TODO 从存储的内容里读取数据
         allNotiFragment.refreshAllLayout();
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (resultCode) {
+            case REQUEST_NOTIPERMISSION:
+                break;
+                default:
+                    break;
+        }
     }
 
     @Override
@@ -141,7 +140,9 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         mViewPager.removeOnPageChangeListener(mPageChangeListener);
         //解绑服务
-
+        if (nMService != null) {
+            unbindService(connection);
+        }
     }
 
     private ViewPager.OnPageChangeListener mPageChangeListener = new ViewPager.OnPageChangeListener() {
@@ -173,7 +174,25 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+    //绑定服务的connection
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder binder) {
+            nmBinder = (NotificationMonitorService.NmBinder) binder;
+            //前面的是Binder,可以用来操纵服务,调用服务的方法
+            nMService = nmBinder.getNmService();
+        }
 
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+
+        @Override
+        public void onBindingDied(ComponentName name) {
+            unbindService(connection);
+        }
+    };
     private class MyFragmentPagerAdapter extends FragmentPagerAdapter {
 
         private List<Fragment> mList;

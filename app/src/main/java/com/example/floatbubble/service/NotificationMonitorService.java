@@ -3,6 +3,7 @@ package com.example.floatbubble.service;
 import android.app.Notification;
 import android.content.Intent;
 
+import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,26 +11,31 @@ import android.os.IBinder;
 
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.example.floatbubble.InterfaceBin.NotificationComeListener;
+import com.example.floatbubble.Util.AppUtil;
 import com.example.floatbubble.Util.ClassifyNotiUtil;
+import com.example.floatbubble.db.InterestedPool;
 import com.example.floatbubble.db.NewNotification;
 import com.example.floatbubble.db.NotificationPool;
 
 
 public class NotificationMonitorService extends NotificationListenerService {
 
-    //private volatile static NotificationMonitorService service;
+   // private volatile static NotificationMonitorService service;
+
 
 
     private NmBinder nmBinder = new NmBinder();
 
     //通知带来的回调接口
-    private NotificationComeListener notiComelistener;
+    public NotificationComeListener notiComelistener;
 
     public void setNotificationComeListener(NotificationComeListener listener) {
         this.notiComelistener = listener;
+
     }
 
 
@@ -44,6 +50,24 @@ public class NotificationMonitorService extends NotificationListenerService {
                 }
             }
         }, 1000);
+        StatusBarNotification[] list = getActiveNotifications();
+        String pck = getPackageName();
+        if (list != null) {
+        for (StatusBarNotification  n : list) {
+            Notification notification = n.getNotification();
+            //获取发送通知的App名字
+            String appName = "知乎";
+            //获取通知的标签
+            String label = ClassifyNotiUtil.analyseNoti(notification);
+            //新建自定义通知
+            NewNotification nn = new NewNotification(notification, label);
+            //设置发送者名字
+            nn.setSendAppName(appName);
+            //将该通知加入到通知池
+            NotificationPool.getNotiPoolInstance().addNotification(nn);
+            InterestedPool.getNotiPoolInstance().addNotification(nn);
+        }
+        }
 
     }
 
@@ -80,8 +104,19 @@ public class NotificationMonitorService extends NotificationListenerService {
         String notificationTitle = extras.getString(Notification.EXTRA_TITLE);
         // 获取接收消息的内容
         String notificationText = extras.getString(Notification.EXTRA_TEXT);
-        NewNotification nn = ClassifyNotiUtil.analyseNoti(sbn.getNotification());
+        Notification notification = sbn.getNotification();
+        //获取发送通知的App名字
+        //String appName = AppUtil.getAppName(this,notificationPkg);
+        String appName = "知乎";
+        //获取通知的标签
+        String label = ClassifyNotiUtil.analyseNoti(notification);
+        //新建自定义通知
+        NewNotification nn = new NewNotification(notification,label);
+        //设置发送者名字
+        nn.setSendAppName(appName);
+        //将该通知加入到通知池
         NotificationPool.getNotiPoolInstance().addNotification(nn);
+        InterestedPool.getNotiPoolInstance().addNotification(nn);
 //        if (notiComelistener != null) {
 //            notiComelistener.onNotificationCome();
 //        }
@@ -102,14 +137,36 @@ public class NotificationMonitorService extends NotificationListenerService {
         Log.i("XSL_Test", "Notification removed " + notificationTitle + " & " + notificationText);
     }
 
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        //isBound = true;
+        String action = intent.getAction();
+        Log.d("NOTIF", "onBind: " + action);
+
+        if (SERVICE_INTERFACE.equals(action)) {
+            Log.d("NOTIF", "Bound by system");
+            return super.onBind(intent);
+        } else {
+            Log.d("NOTIF", "Bound by application");
+            return nmBinder;
+        }
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        //isBound = false;
+        return super.onUnbind(intent);
+    }
 
     public class NmBinder extends Binder {
+        //TODO 一些操控服务的方法
         /**
          * 获取当前服务的实例
          * * @return
         */
        public  NotificationMonitorService getNmService() {
-            return NotificationMonitorService.this;
+           return NotificationMonitorService.this;
         }
 
     }
