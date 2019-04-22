@@ -1,4 +1,4 @@
-package com.example.floatbubble.db;
+package com.example.floatbubble.entity;
 
 import java.util.ArrayList;
 import java.util.List;

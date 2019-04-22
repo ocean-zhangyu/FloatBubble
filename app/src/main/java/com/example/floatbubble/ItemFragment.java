@@ -10,8 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.floatbubble.db.NewNotification;
-import com.example.floatbubble.db.NotificationPool;
+import com.example.floatbubble.entity.NewNotification;
+import com.example.floatbubble.entity.NotificationPool;
 import com.example.floatbubble.utilAdapter.MyItemRecyclerViewAdapter;
 
 import java.util.List;

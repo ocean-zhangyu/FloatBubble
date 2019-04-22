@@ -1,8 +1,7 @@
-package com.example.floatbubble.db;
+package com.example.floatbubble.entity;
 
 import android.app.Notification;
 import android.app.PendingIntent;
-import android.content.Intent;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -12,12 +11,12 @@ public class NewNotification{
     private String time;
     private String title;
     private String content;
-    private String label;
+    private int label;
     private String sendAppName;
     private int priority;
     private PendingIntent intent;
     private Notification notification;
-    public NewNotification(String time, String title, String content, String label, int priority, PendingIntent intent) {
+    public NewNotification(String time, String title, String content, int label, int priority, PendingIntent intent) {
         this.time = time;
         this.title = title;
         this.content = content;
@@ -28,7 +27,6 @@ public class NewNotification{
 
 
     public NewNotification(){
-
     }
     public NewNotification(Notification notification) {
         this.notification = notification;
@@ -38,7 +36,7 @@ public class NewNotification{
         intent = notification.contentIntent;
         this.priority = notification.priority;
     }
-    public NewNotification(Notification notification1, String label) {
+    public NewNotification(Notification notification1, int label) {
         this.notification = notification1;
         this.time = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date(notification.when));
         this.title = notification.extras.getString(Notification.EXTRA_TITLE);
@@ -79,11 +77,11 @@ public class NewNotification{
     }
 
 
-    public String getLabel() {
+    public int getLabel() {
         return label;
     }
 
-    public void setLabel(String label) {
+    public void setLabel(int label) {
         this.label = label;
     }
 

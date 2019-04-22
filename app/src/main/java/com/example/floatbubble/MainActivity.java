@@ -5,6 +5,7 @@ package com.example.floatbubble;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -23,7 +24,13 @@ import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import com.example.floatbubble.Util.AppUtil;
+import com.example.floatbubble.Util.LogUtil;
+import com.example.floatbubble.entity.dbTable.Keywords;
+import com.example.floatbubble.entity.dbTable.PkgNames;
+import com.example.floatbubble.entity.dbTable.SocialApps;
 import com.example.floatbubble.service.NotificationMonitorService;
+
+import org.litepal.tablemanager.Connector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     //通知监听服务
     private NotificationMonitorService nMService;
-
+    //绑定
     private NotificationMonitorService.NmBinder nmBinder;
 
 
@@ -49,26 +56,69 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //生成数据库
+        Connector.getDatabase();
+        //保存数据
+        SharedPreferences preferences = getSharedPreferences("data",MODE_PRIVATE);
+        //是否初次启动
+        boolean isFirst = preferences.getBoolean("isFirst", true);
+        if (isFirst) {
+            //初始化过滤数据库
+            initInflateDB();
+        }
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        //初始化各控件
         initView();
-        Log.d("MainActivity","onCreate 活动");
+
+        LogUtil.d("MainActivity","onCreate 活动");
         if (!AppUtil.isNotificationListenerEnabled(this)) {
-            //未绑定服务
+            //如果服务未启动
             Intent openSettings = new Intent(this, SettingActivity.class);
             startActivityForResult(openSettings,REQUEST_NOTIPERMISSION);
         } else {
+            //如果服务已启动,绑定服务以获取实时通知
             Intent intent = new Intent(this, NotificationMonitorService.class);
-            //startActivity(intent);
-            Log.d("主活动","绑定活动");
-            bindService(intent, connection, BIND_AUTO_CREATE);
-            Log.d("主活动", "设置监听");
+            LogUtil.d("主活动","绑定活动");
+            bindService(intent, connection, BIND_ADJUST_WITH_ACTIVITY);
+            LogUtil.d("主活动", "设置监听");
         }
+    }
+
+    private void initInflateDB() {
+        Keywords keyword = new Keywords("正在其他应用的上层显示内容");
+        keyword.save();
+        Keywords keyword1 = new Keywords("输入法");
+        keyword1.save();
+        Keywords keyword2 = new Keywords("正在运行");
+        keyword2.save();
+        PkgNames pkgName = new PkgNames("android");
+        pkgName.save();
+        SocialApps qq = new SocialApps("com.tencent.mobileqq");
+        qq.save();
+        SocialApps wechat = new SocialApps("com.tencent.mm");
+        wechat.save();
+        SharedPreferences.Editor editor = getSharedPreferences("data",MODE_PRIVATE).edit();
+        editor.putBoolean("isFirst", false);
+        editor.apply();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        LogUtil.d("MainActivity","onStart 活动");
+        if (!AppUtil.isNotificationListenerEnabled(this)) {
+            //如果服务未启动
+            Intent openSettings = new Intent(this, SettingActivity.class);
+            startActivityForResult(openSettings,REQUEST_NOTIPERMISSION);
+        } else {
+            //如果服务已启动,绑定服务以获取实时通知
+            Intent intent = new Intent(this, NotificationMonitorService.class);
+            LogUtil.d("主活动","绑定活动");
+            bindService(intent, connection, BIND_AUTO_CREATE);
+            LogUtil.d("主活动", "设置监听");
+        }
+        //注册监听
         if (nMService != null) {
             //有新通知到来,该信息由通知监听服务发送
             nMService.setNotificationComeListener(() -> {
@@ -76,7 +126,6 @@ public class MainActivity extends AppCompatActivity {
                 allNotiFragment.refreshView();
             });
         }
-        Log.d("MainActivity","onStart 活动");
         //TODO 从存储的内容里读取数据
         allNotiFragment.refreshAllLayout();
     }
@@ -145,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //碎片移动监听器
     private ViewPager.OnPageChangeListener mPageChangeListener = new ViewPager.OnPageChangeListener() {
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -163,6 +213,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    //底栏按钮监听器
     private RadioGroup.OnCheckedChangeListener mOnCheckedChangeListener = new RadioGroup.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -174,6 +225,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
     //绑定服务的connection
     private ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -193,6 +245,8 @@ public class MainActivity extends AppCompatActivity {
             unbindService(connection);
         }
     };
+
+    //控制碎片的适配器
     private class MyFragmentPagerAdapter extends FragmentPagerAdapter {
 
         private List<Fragment> mList;

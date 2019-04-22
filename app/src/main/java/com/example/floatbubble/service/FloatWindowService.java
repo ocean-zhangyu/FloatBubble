@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.IBinder;
 import android.provider.Settings;
@@ -15,18 +16,16 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.floatbubble.InterfaceBin.OnItemTouchCallbackListener;
 import com.example.floatbubble.R;
+import com.example.floatbubble.Util.LogUtil;
 import com.example.floatbubble.data.ProgramFlags;
-import com.example.floatbubble.db.DefaultItemTouchHelpCallback;
-import com.example.floatbubble.db.DefaultItemTouchHelper;
-import com.example.floatbubble.db.InterestedPool;
-import com.example.floatbubble.db.NewNotification;
-import com.example.floatbubble.db.NotificationPool;
+import com.example.floatbubble.entity.DefaultItemTouchHelper;
+import com.example.floatbubble.entity.InterestedPool;
+import com.example.floatbubble.entity.NewNotification;
 import com.example.floatbubble.utilAdapter.FloatRecyclerAdapter;
 
 import java.util.Collections;
@@ -63,6 +62,8 @@ public class FloatWindowService extends Service {
     //屏幕大小
     Point size = new Point();
 
+    //通知面板是否开启
+    boolean isDisplay = false;
     public FloatWindowService() {
     }
 
@@ -107,8 +108,29 @@ public class FloatWindowService extends Service {
             itemTouchHelper.attachToRecyclerView(notiListView);
             notiListView.setLayoutManager(new LinearLayoutManager(this));
             List < NewNotification > list = InterestedPool.getNotiPoolInstance().getNewNotificationList();
+            //展示面板时再装载到list
             adapter = new FloatRecyclerAdapter(list);
-
+            notiListView.setOnTouchListener((v, event) -> {
+                LogUtil.i("悬浮窗口", "onTouch");
+                /*
+                int x = (int) event.getX();
+                int y = (int) event.getY();
+                Rect rect = new Rect();
+                notiListView.getGlobalVisibleRect(rect);
+                if (!rect.contains(x, y)) {
+                    LogUtil.i("悬浮窗口", "hide ");
+                */
+                //收起通知列表
+                windowManager.removeView(notiListView);
+                //收起气泡
+                layoutParams.x = bubbleX;
+                layoutParams.y = bubbleY;
+                windowManager.updateViewLayout(coreFloatBubble,layoutParams);
+                flag = ProgramFlags.BUBBLE_FLANK;
+                isDisplay = false;
+                //}
+                return false;
+            });
             initNotiListPanel();
 
             showFloatBubble(coreFloatBubble);
@@ -168,12 +190,13 @@ public class FloatWindowService extends Service {
         }
         //设置LayoutParamsPanel
         layoutParamsPanel.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
+        //| WindowManager.LayoutParams.FLAG_DIM_BEHIND ;
         //FLAG_FULL_SCREEN, FLAG_LAYOUT_IN_SCREEN
         layoutParamsPanel.format = PixelFormat.RGBA_8888;
         //包容通知,已经限定宽度
         layoutParamsPanel.width = WindowManager.LayoutParams.MATCH_PARENT;
         //限定高度为气泡以上的内容区域
-        layoutParamsPanel.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        layoutParamsPanel.height = size.y - 300;
         layoutParamsPanel.x = 0;
         layoutParamsPanel.y = 10;
         //将控件添加到WindowManager中
@@ -189,6 +212,7 @@ public class FloatWindowService extends Service {
         notiListView.setAdapter(adapter);
 
         windowManager.addView(notiListView, layoutParamsPanel);
+        isDisplay = true;
     }
 
     /**
@@ -214,9 +238,13 @@ public class FloatWindowService extends Service {
                     break;
                 case ProgramFlags.BUBBLE_CENTER:
                     //清除所有通知,回到原来的位置
-                    windowManager.removeView(notiListView);
+                    //TODO 点击外部隐藏,重复,需判断面板是否开启
+                    if (isDisplay) {
+                        windowManager.removeView(notiListView);
+                    }
                     //TODO 清空兴趣池,获取暂存兴趣池
                     layoutParams.x = bubbleX;
+                    layoutParams.y = bubbleY;
                     windowManager.updateViewLayout(coreFloatBubble,layoutParams);
                     flag = ProgramFlags.BUBBLE_FLANK;
                     break;

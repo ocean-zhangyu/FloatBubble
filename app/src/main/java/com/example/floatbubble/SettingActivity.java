@@ -1,9 +1,7 @@
 package com.example.floatbubble;
 
 
-import android.app.ActivityManager;
 import android.app.AppOpsManager;
-import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -13,22 +11,17 @@ import android.os.Binder;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.floatbubble.Util.AppUtil;
-import com.example.floatbubble.db.InterestedPool;
 import com.example.floatbubble.service.FloatWindowService;
 import com.example.floatbubble.service.NotificationMonitorService;
 
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Set;
 
 
 public class SettingActivity extends AppCompatActivity {
@@ -54,9 +47,9 @@ public class SettingActivity extends AppCompatActivity {
 
         startNotiListener.setOnClickListener((view)->{
             //开启通知服务
-            Intent intent = new Intent(this, MainActivity.class);
-            startActivity(intent);
-            //finish();
+//            Intent intent = new Intent(this, MainActivity.class);
+//            startActivity(intent);
+            finish();
         });
         //注册监听
         requestOverly.setOnClickListener((view)-> {
@@ -95,25 +88,6 @@ public class SettingActivity extends AppCompatActivity {
     }
 
 
-
-    /*
-    private boolean isNotificationListenersEnabled() {
-        String pkgName = getPackageName();
-        final String flat = Settings.Secure.getString(getContentResolver(),ENABLED_NOTIFICATION_LISTENERS);
-        if (!TextUtils.isEmpty(flat)) {
-            final String[] names = flat.split(":");
-            for (int i = 0; i < names.length; i++) {
-                final ComponentName componentName = ComponentName.unflattenFromString(names[i]);
-                if (componentName != null) {
-                    if (TextUtils.equals(pkgName, componentName.getPackageName())) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-    */
     /**
      * 判断 悬浮窗口权限是否打开
      * 6.0以下

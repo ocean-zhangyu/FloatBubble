@@ -3,4 +3,10 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+    <color name="transparent">#00FFFFFF</color>
+    <color name="colorNews">#81c784</color>
+    <color name="colorCommunication">#e57373</color>
+    <color name="colorReminder">#fff176</color>
+    <color name="colorAd">#a1887f</color>
+    <color name="colorOthers">#4fc3f7</color>
 </resources>

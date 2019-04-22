@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 
 import com.example.floatbubble.R;
-import com.example.floatbubble.db.NewNotification;
+import com.example.floatbubble.entity.NewNotification;
 
 
 

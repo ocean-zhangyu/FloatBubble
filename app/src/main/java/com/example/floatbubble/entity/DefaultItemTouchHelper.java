@@ -1,4 +1,4 @@
-package com.example.floatbubble.db;
+package com.example.floatbubble.entity;
 
 import android.support.v7.widget.helper.ItemTouchHelper;
 

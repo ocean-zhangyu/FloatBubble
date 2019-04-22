@@ -3,7 +3,6 @@ package com.example.floatbubble.service;
 import android.app.Notification;
 import android.content.Intent;
 
-import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,18 +14,43 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.example.floatbubble.InterfaceBin.NotificationComeListener;
-import com.example.floatbubble.Util.AppUtil;
 import com.example.floatbubble.Util.ClassifyNotiUtil;
-import com.example.floatbubble.db.InterestedPool;
-import com.example.floatbubble.db.NewNotification;
-import com.example.floatbubble.db.NotificationPool;
+import com.example.floatbubble.Util.LogUtil;
+import com.example.floatbubble.data.LabelFlags;
+import com.example.floatbubble.entity.InterestedPool;
+import com.example.floatbubble.entity.NewNotification;
+import com.example.floatbubble.entity.NotificationPool;
+import com.example.floatbubble.entity.dbTable.AppNames;
+import com.example.floatbubble.entity.dbTable.Keywords;
+import com.example.floatbubble.entity.dbTable.NotiTest;
+import com.example.floatbubble.entity.dbTable.PkgNames;
+import com.example.floatbubble.entity.dbTable.SocialApps;
+
+import org.litepal.crud.DataSupport;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class NotificationMonitorService extends NotificationListenerService {
 
-   // private volatile static NotificationMonitorService service;
+    // private volatile static NotificationMonitorService service;
 
-
+    //通知过滤标志
+    private final int INVALIDINFO = 1;  //无效,不进行任何处理
+    private final int SYSTEMINFO = 2;   //系统消息,不消除
+    private final int SOCIALINFO = 3;   //社交消息,保护性处理
+    private final int COMMONINFO = 4;   //普通消息,正常处理
+    //第一次运行标志
+    private boolean isFirst = true;
+    //关键词过滤列表
+     private List<Keywords> keyWords;
+    //包名过滤列表
+    private List<PkgNames> pkgInflateList;
+    //APP名过滤列表
+    private List<AppNames> appNameList;
+    //社交app保护
+    private List<SocialApps> socialAppsList;
 
     private NmBinder nmBinder = new NmBinder();
 
@@ -42,46 +66,26 @@ public class NotificationMonitorService extends NotificationListenerService {
     @Override
     public void onCreate() {
         super.onCreate();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (getActiveNotifications() != null) {
-                    Log.d("通知计数","NotificationService onCreate count:" + getActiveNotifications().length);
-                }
-            }
-        }, 1000);
-        StatusBarNotification[] list = getActiveNotifications();
-        String pck = getPackageName();
-        if (list != null) {
-        for (StatusBarNotification  n : list) {
-            Notification notification = n.getNotification();
-            //获取发送通知的App名字
-            String appName = "知乎";
-            //获取通知的标签
-            String label = ClassifyNotiUtil.analyseNoti(notification);
-            //新建自定义通知
-            NewNotification nn = new NewNotification(notification, label);
-            //设置发送者名字
-            nn.setSendAppName(appName);
-            //将该通知加入到通知池
-            NotificationPool.getNotiPoolInstance().addNotification(nn);
-            InterestedPool.getNotiPoolInstance().addNotification(nn);
+        LogUtil.d("通知","服务启动");
+        //初始化数据等等
+        keyWords = DataSupport.findAll(Keywords.class);
+        pkgInflateList = DataSupport.findAll(PkgNames.class);
+        socialAppsList = DataSupport.findAll(SocialApps.class);
+        if (getActiveNotifications() != null) {
+            LogUtil.d("通知计数create", "NotificationService onCreate count:" + getActiveNotifications().length);
         }
-        }
-
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         //初始化数据等等
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (getActiveNotifications() != null) {
-                    Log.d("通知计数","NotificationService onCreate count:" + getActiveNotifications().length);
-                }
-            }
-        }, 1000);
+        LogUtil.d("通知","服务重启");
+        keyWords = DataSupport.findAll(Keywords.class);
+        pkgInflateList = DataSupport.findAll(PkgNames.class);
+        socialAppsList = DataSupport.findAll(SocialApps.class);
+        if (getActiveNotifications() != null) {
+            LogUtil.d("通知计数startcommand", "NotificationService onCreate count:" + getActiveNotifications().length);
+        }
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -96,45 +100,141 @@ public class NotificationMonitorService extends NotificationListenerService {
     // 在收到消息时触发
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
-        // TODO Auto-generated method stub
+        isFirst = false;
+        /**
+         * 获取通知消息的文本内容,以加以判断
+         */
         Bundle extras = sbn.getNotification().extras;
         // 获取接收消息APP的包名
-        String notificationPkg = sbn.getPackageName();
+        String pkgName = sbn.getPackageName();
         // 获取接收消息的抬头
         String notificationTitle = extras.getString(Notification.EXTRA_TITLE);
         // 获取接收消息的内容
         String notificationText = extras.getString(Notification.EXTRA_TEXT);
-        Notification notification = sbn.getNotification();
-        //获取发送通知的App名字
+        //TODO 获取发送通知的App名字
         //String appName = AppUtil.getAppName(this,notificationPkg);
-        String appName = "知乎";
-        //获取通知的标签
-        String label = ClassifyNotiUtil.analyseNoti(notification);
-        //新建自定义通知
-        NewNotification nn = new NewNotification(notification,label);
-        //设置发送者名字
-        nn.setSendAppName(appName);
-        //将该通知加入到通知池
-        NotificationPool.getNotiPoolInstance().addNotification(nn);
-        InterestedPool.getNotiPoolInstance().addNotification(nn);
+        LogUtil.d("通知来源",pkgName + " 标题 " + notificationTitle + " 内容 " + notificationText);
+
+
+
+        //处理通知
+        if (notificationTitle != null && notificationText != null & sbn.getNotification().contentIntent != null) {
+            //是否过滤该通知
+            int flag = inflater(notificationTitle, notificationText, pkgName);
+            Log.d("通知", "过滤: " + String.valueOf(flag));
+            Notification notification = sbn.getNotification();
+            int label;//标签
+            //通信标签单独过滤
+            if (flag == SOCIALINFO) {
+                label = LabelFlags.COMMUNICATION;
+                //新建自定义通知
+                NewNotification nn = new NewNotification(notification,label);
+                //将该通知加入到通知池,通信消息不存入数据库,不消除
+                NotificationPool.getNotiPoolInstance().addNotification(nn);
+                InterestedPool.getNotiPoolInstance().addNotification(nn);
+            } else if (flag == COMMONINFO){
+                //获取通知的标签,默认为提醒
+                label = ClassifyNotiUtil.analyseNoti(notificationTitle+";"+notificationText);
+                //新建自定义通知
+                NewNotification nn = new NewNotification(notification,label);
+                //将该通知加入到通知池
+                NotificationPool.getNotiPoolInstance().addNotification(nn);
+                InterestedPool.getNotiPoolInstance().addNotification(nn);
+                //将该通知存入数据库
+                NotiTest notiTest = new NotiTest();
+                notiTest.setTitle(notificationTitle);
+                notiTest.setContent(notificationText);
+                notiTest.save();
+                // 是否清除该通知
+                if (sbn.isClearable()){
+                    //不清楚通信消息
+                    if (label != LabelFlags.COMMUNICATION) {
+                        cancelNotification(sbn.getKey());
+                    }
+                }
+            }
 //        if (notiComelistener != null) {
 //            notiComelistener.onNotificationCome();
 //        }
-        Log.i("XSL_Test", "Notification posted " + notificationTitle + " & " + notificationText);
+
+        }
     }
 
+    /**
+     * 过滤无用的系统产生信息,如输入法,正在运行提示等
+     * 同时可以过滤自定义关键词,自定义包名信息
+     * @param strings
+     * @return int 处理标志
+     */
+    private int inflater(String... strings) {
+        for (Keywords keywords : keyWords) {
+            if (strings[0].contains(keywords.getKeyWrod())){
+                return INVALIDINFO;
+            }
+            if (strings[1].contains(keywords.getKeyWrod())){
+                return INVALIDINFO;
+            }
+        }
+        for (PkgNames pkgName : pkgInflateList) {
+            if (strings[2].equals(pkgName.getPkgName())){
+                return SYSTEMINFO;
+            }
+        }
+        for (SocialApps app : socialAppsList) {
+            if (strings[2].equals(app.getPkgName())) {
+                return SOCIALINFO;
+            }
+        }
+        return COMMONINFO;
+    }
     // 在删除消息时触发
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
-        // TODO Auto-generated method stub
-        Bundle extras = sbn.getNotification().extras;
-        // 获取接收消息APP的包名
-        String notificationPkg = sbn.getPackageName();
-        // 获取接收消息的抬头
-        String notificationTitle = extras.getString(Notification.EXTRA_TITLE);
-        // 获取接收消息的内容
-        String notificationText = extras.getString(Notification.EXTRA_TEXT);
-        Log.i("XSL_Test", "Notification removed " + notificationTitle + " & " + notificationText);
+        if (isFirst) {
+            Bundle extras = sbn.getNotification().extras;
+            // 获取接收消息的抬头
+            String notificationTitle = extras.getString(Notification.EXTRA_TITLE);
+            // 获取接收消息的内容
+            String notificationText = extras.getString(Notification.EXTRA_TEXT);
+            String pkgName = sbn.getPackageName();
+            Log.d("通知来源",pkgName + "标题 " + notificationTitle + " 内容 " + notificationText);
+            if (notificationTitle != null && notificationText != null & sbn.getNotification().contentIntent != null) {
+                //是否过滤该通知
+                int flag = inflater(notificationTitle, notificationText, pkgName);
+                Log.d("通知", "过滤: " + String.valueOf(flag));
+                Notification notification = sbn.getNotification();
+                int label;//标签
+                //通信标签单独过滤
+                if (flag == SOCIALINFO) {
+                    label = LabelFlags.COMMUNICATION;
+                    //新建自定义通知
+                    NewNotification nn = new NewNotification(notification,label);
+                    //将该通知加入到通知池,通信消息不存入数据库,不消除
+                    NotificationPool.getNotiPoolInstance().addNotification(nn);
+                    InterestedPool.getNotiPoolInstance().addNotification(nn);
+                } else if (flag == COMMONINFO){
+                    //获取通知的标签,默认为提醒
+                    label = ClassifyNotiUtil.analyseNoti(notificationTitle+";"+notificationText);
+                    //新建自定义通知
+                    NewNotification nn = new NewNotification(notification,label);
+                    //将该通知加入到通知池
+                    NotificationPool.getNotiPoolInstance().addNotification(nn);
+                    InterestedPool.getNotiPoolInstance().addNotification(nn);
+                    //将该通知存入数据库
+                    NotiTest notiTest = new NotiTest();
+                    notiTest.setTitle(notificationTitle);
+                    notiTest.setContent(notificationText);
+                    notiTest.save();
+                    // 是否清除该通知
+                    if (sbn.isClearable()){
+                        //不清楚通信消息
+                        if (label != LabelFlags.COMMUNICATION ) {
+                            cancelNotification(sbn.getKey());
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Nullable

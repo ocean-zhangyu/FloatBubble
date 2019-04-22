@@ -1,10 +1,9 @@
-package com.example.floatbubble.db;
+package com.example.floatbubble.entity;
 
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.widget.LinearLayout;
 
 import com.example.floatbubble.InterfaceBin.OnItemTouchCallbackListener;
 

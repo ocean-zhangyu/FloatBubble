@@ -8,12 +8,19 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+
 import com.example.floatbubble.R;
-import com.example.floatbubble.db.NewNotification;
+import com.example.floatbubble.data.LabelFlags;
+import com.example.floatbubble.entity.NewNotification;
 
 import java.util.List;
+
+import de.hdodenhof.circleimageview.CircleImageView;
+
+import static com.example.floatbubble.R.*;
 
 public class FloatRecyclerAdapter extends RecyclerView.Adapter<FloatRecyclerAdapter.ViewHolder> {
 
@@ -35,10 +42,9 @@ public class FloatRecyclerAdapter extends RecyclerView.Adapter<FloatRecyclerAdap
             if (mContext == null) {
                 mContext = parent.getContext();
             }
-            View view = LayoutInflater.from(mContext).inflate(R.layout.floatnotilist_item,parent,false);
-            final ViewHolder holder = new ViewHolder(view);
+            View view = LayoutInflater.from(mContext).inflate(layout.floatnotilist_item,parent,false);
 
-            return holder;
+            return new ViewHolder(view);
         }
 
         @Override
@@ -46,7 +52,28 @@ public class FloatRecyclerAdapter extends RecyclerView.Adapter<FloatRecyclerAdap
             //findView
             holder.mItem = floatNotiList.get(position);
             NewNotification notification = holder.mItem;
-            holder.mSendAppView.setText(notification.getSendAppName());
+            //根据标签设置颜色
+            switch (notification.getLabel()) {
+                case LabelFlags.NEWS:
+                    holder.mLinearLayoutView.setBackgroundResource(color.colorNews);
+                    break;
+                case LabelFlags.COMMUNICATION:
+                    holder.mLinearLayoutView.setBackgroundResource(color.colorCommunication);
+                    break;
+                case LabelFlags.REMINDER:
+                    holder.mLinearLayoutView.setBackgroundResource(color.colorReminder);
+                    break;
+                case LabelFlags.ADVERTISEMENT:
+                    holder.mLinearLayoutView.setBackgroundResource(color.colorAd);
+                    break;
+                case LabelFlags.OTHERS:
+                    holder.mLinearLayoutView.setBackgroundResource(color.colorOthers);
+                    break;
+                    default:
+                        holder.mLinearLayoutView.setBackgroundResource(color.colorReminder);
+                        break;
+            }
+            holder.mSendAppView.setImageIcon(notification.getNotification().getSmallIcon());
             holder.mSendTitleView.setText(notification.getTitle());
             holder.mSendContentView.setText(notification.getContent());
 
@@ -87,7 +114,8 @@ public class FloatRecyclerAdapter extends RecyclerView.Adapter<FloatRecyclerAdap
 
         public class ViewHolder extends RecyclerView.ViewHolder {
             private final CardView mView;
-            private TextView mSendAppView;
+            private CircleImageView mSendAppView;
+            private LinearLayout mLinearLayoutView;
             private TextView mSendTitleView;
             private TextView mSendContentView;
             private NewNotification mItem;
@@ -95,9 +123,10 @@ public class FloatRecyclerAdapter extends RecyclerView.Adapter<FloatRecyclerAdap
             private ViewHolder(View itemView) {
                 super(itemView);
                 mView = (CardView) itemView;
-                mSendAppView = mView.findViewById(R.id.send_name);
-                mSendTitleView = mView.findViewById(R.id.send_title);
-                mSendContentView = mView.findViewById(R.id.send_content);
+                mLinearLayoutView = mView.findViewById(id.set_background);
+                mSendAppView = mView.findViewById(id.app_icon);
+                mSendTitleView = mView.findViewById(id.send_title);
+                mSendContentView = mView.findViewById(id.send_content);
             }
         }
 
