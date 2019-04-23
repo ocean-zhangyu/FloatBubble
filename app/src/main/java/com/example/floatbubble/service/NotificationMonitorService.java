@@ -17,6 +17,7 @@ import com.example.floatbubble.InterfaceBin.NotificationComeListener;
 import com.example.floatbubble.Util.ClassifyNotiUtil;
 import com.example.floatbubble.Util.LogUtil;
 import com.example.floatbubble.data.LabelFlags;
+import com.example.floatbubble.data.ProgramFlags;
 import com.example.floatbubble.entity.InterestedPool;
 import com.example.floatbubble.entity.NewNotification;
 import com.example.floatbubble.entity.NotificationPool;
@@ -31,16 +32,17 @@ import org.litepal.crud.DataSupport;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.floatbubble.data.ProgramFlags.COMMONINFO;
+import static com.example.floatbubble.data.ProgramFlags.SOCIALINFO;
+import static com.example.floatbubble.data.ProgramFlags.INVALIDINFO;
+import static com.example.floatbubble.data.ProgramFlags.SYSTEMINFO;
+
 
 public class NotificationMonitorService extends NotificationListenerService {
 
     // private volatile static NotificationMonitorService service;
 
-    //通知过滤标志
-    private final int INVALIDINFO = 1;  //无效,不进行任何处理
-    private final int SYSTEMINFO = 2;   //系统消息,不消除
-    private final int SOCIALINFO = 3;   //社交消息,保护性处理
-    private final int COMMONINFO = 4;   //普通消息,正常处理
+
     //第一次运行标志
     private boolean isFirst = true;
     //关键词过滤列表
@@ -67,6 +69,7 @@ public class NotificationMonitorService extends NotificationListenerService {
     public void onCreate() {
         super.onCreate();
         LogUtil.d("通知","服务启动");
+        cancelAllNotifications();
         //初始化数据等等
         keyWords = DataSupport.findAll(Keywords.class);
         pkgInflateList = DataSupport.findAll(PkgNames.class);
@@ -111,9 +114,11 @@ public class NotificationMonitorService extends NotificationListenerService {
         String notificationTitle = extras.getString(Notification.EXTRA_TITLE);
         // 获取接收消息的内容
         String notificationText = extras.getString(Notification.EXTRA_TEXT);
+        //bigText
+        //String bigText = extras.getString(Notification.)
         //TODO 获取发送通知的App名字
         //String appName = AppUtil.getAppName(this,notificationPkg);
-        LogUtil.d("通知来源",pkgName + " 标题 " + notificationTitle + " 内容 " + notificationText);
+        LogUtil.d("通知来源post",pkgName + " 标题 " + notificationTitle + " 内容 " + notificationText);
 
 
 
@@ -121,7 +126,7 @@ public class NotificationMonitorService extends NotificationListenerService {
         if (notificationTitle != null && notificationText != null & sbn.getNotification().contentIntent != null) {
             //是否过滤该通知
             int flag = inflater(notificationTitle, notificationText, pkgName);
-            Log.d("通知", "过滤: " + String.valueOf(flag));
+            LogUtil.d("通知post", "过滤: " + String.valueOf(flag));
             Notification notification = sbn.getNotification();
             int label;//标签
             //通信标签单独过滤
@@ -148,9 +153,8 @@ public class NotificationMonitorService extends NotificationListenerService {
                 // 是否清除该通知
                 if (sbn.isClearable()){
                     //不清楚通信消息
-                    if (label != LabelFlags.COMMUNICATION) {
-                        cancelNotification(sbn.getKey());
-                    }
+                    cancelNotification(sbn.getKey());
+
                 }
             }
 //        if (notiComelistener != null) {
@@ -197,11 +201,11 @@ public class NotificationMonitorService extends NotificationListenerService {
             // 获取接收消息的内容
             String notificationText = extras.getString(Notification.EXTRA_TEXT);
             String pkgName = sbn.getPackageName();
-            Log.d("通知来源",pkgName + "标题 " + notificationTitle + " 内容 " + notificationText);
+            Log.d("通知来源remove",pkgName + "标题 " + notificationTitle + " 内容 " + notificationText);
             if (notificationTitle != null && notificationText != null & sbn.getNotification().contentIntent != null) {
                 //是否过滤该通知
                 int flag = inflater(notificationTitle, notificationText, pkgName);
-                Log.d("通知", "过滤: " + String.valueOf(flag));
+                Log.d("通知remove", "过滤: " + String.valueOf(flag));
                 Notification notification = sbn.getNotification();
                 int label;//标签
                 //通信标签单独过滤
@@ -227,7 +231,7 @@ public class NotificationMonitorService extends NotificationListenerService {
                     notiTest.save();
                     // 是否清除该通知
                     if (sbn.isClearable()){
-                        //不清楚通信消息
+                        //不清除通信消息
                         if (label != LabelFlags.COMMUNICATION ) {
                             cancelNotification(sbn.getKey());
                         }
